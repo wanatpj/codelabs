@@ -33,10 +33,18 @@ You can find that constructors are called:
 Please consider examples in the following order:
 - `multiple_inheritance_constructor_order/Python/construct`
 - `multiple_inheritance_constructor_order/Python/method`
+- `multiple_inheritance_constructor_order/Python/construct_legacy_style`
 
 Python is using MRO (Method Resolution Order) to determine in which order methods (e.g constructors) should be called.
 
 Compare `Python/construct` and `Python/method` to see that the execution order is the same.
+
+It is possible to call base class constructors in a different order than the lineralization order from MRO.
+One can call the constructors directly. See:
+- `multiple_inheritance_constructor_order/Python/construct_direct`
+
+Allocation of Python class executes in the MRO order, but before the constructor.
+- `multiple_inheritance_constructor_order/Python/allocate_and_contruct`
 
 # Summary
 - C++ inheritance structure is more like a graph, while for Python is linear

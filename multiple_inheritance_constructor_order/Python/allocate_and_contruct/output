@@ -1,0 +1,14 @@
+Allocate D - enter.
+Allocate B - enter.
+Allocate C - enter.
+Allocate A.
+Allocate C - exit.
+Allocate B - exit.
+Allocate D - exit.
+Construct D - enter.
+Construct B - enter.
+Construct C - enter.
+Construct A.
+Construct C - exit.
+Construct B - exit.
+Construct D - exit.
