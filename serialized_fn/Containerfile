@@ -1,0 +1,15 @@
+ARG RHEL_VERSION
+
+FROM registry.access.redhat.com/ubi${RHEL_VERSION}/ubi:latest AS build
+COPY install-compiler.sh /tmp/install-compiler.sh
+RUN bash /tmp/install-compiler.sh
+WORKDIR /src
+COPY Makefile test_load_from_file.cpp test_load_from_memory.cpp ./
+COPY lib/*.cpp lib/*.h ./lib/
+RUN make -j2 test_load_from_file test_load_from_memory
+
+FROM registry.access.redhat.com/ubi${RHEL_VERSION}/ubi:latest AS runtime
+WORKDIR /app
+COPY --from=build /src/test_load_from_file /src/test_load_from_memory ./
+COPY --from=build /src/lib/circumference.so ./lib/circumference.so
+CMD ["./test_load_from_file"]

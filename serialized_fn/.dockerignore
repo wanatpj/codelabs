@@ -1,0 +1,4 @@
+**/*.o
+**/*.so
+test_load_from_file
+test_load_from_memory
