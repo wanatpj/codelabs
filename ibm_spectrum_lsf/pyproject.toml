@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "spectrum-lsf-codelab"
+version = "0.1.0"
+description = "Typed C++ Monte Carlo dispatch with LSF job-array submission"
+authors = ["Codelab contributors"]
+readme = "README.md"
+packages = [{ include = "lib" }, { include = "cli.py" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typer = ">=0.16,<1"
+structlog = ">=25,<27"
+
+[tool.poetry.group.dev.dependencies]
+mypy = ">=1.15,<2"
+
+[tool.poetry.scripts]
+lsf-codelab = "cli:app"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["lib", "cli.py", "tests"]
+
+[build-system]
+requires = ["poetry-core>=1.9"]
+build-backend = "poetry.core.masonry.api"
