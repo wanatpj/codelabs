@@ -7,7 +7,7 @@ RHEL_VERSION ?= 8
 IMAGE ?= localhost/serialized-fn:ubi$(RHEL_VERSION)
 
 lib/%.so: lib/%.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -fPIC -shared $< -o $@ $(LDFLAGS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -fPIC -shared $^ -o $@ $(LDFLAGS)
 
 lib/%.o: lib/%.cpp lib/%.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
@@ -15,8 +15,11 @@ lib/%.o: lib/%.cpp lib/%.h
 test_load_from_file: test_load_from_file.cpp lib/load_circumference.o lib/circumference.so
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< lib/load_circumference.o -o $@ $(LDFLAGS) -ldl
 
-test_load_from_memory: test_load_from_memory.cpp lib/load_circumference.o lib/read_bytes.o lib/circumference.so
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< lib/load_circumference.o lib/read_bytes.o -o $@ $(LDFLAGS) -ldl
+test_load_from_memory: test_load_from_memory.cpp lib/load_circumference.o lib/read_bytes.o lib/in_memory_file.o lib/circumference.so
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< lib/load_circumference.o lib/read_bytes.o lib/in_memory_file.o -o $@ $(LDFLAGS) -ldl
+
+benchmark_in_memory_fds: benchmark_in_memory_fds.cpp lib/in_memory_file.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 container-build:
 	$(CONTAINER_ENGINE) build -f Containerfile --target runtime --build-arg RHEL_VERSION=$(RHEL_VERSION) -t $(IMAGE) .
@@ -26,6 +29,9 @@ test-file: container-build
 
 test-memory: container-build
 	$(CONTAINER_ENGINE) run --rm $(IMAGE) ./test_load_from_memory
+
+benchmark-memory-fds: container-build
+	$(CONTAINER_ENGINE) run --rm $(IMAGE) ./benchmark_in_memory_fds 2000000
 
 containers-build:
 	$(MAKE) container-build RHEL_VERSION=7
@@ -37,10 +43,14 @@ containers-run: containers-build
 	$(CONTAINER_ENGINE) run --rm localhost/serialized-fn:ubi8 ./test_load_from_file
 	$(CONTAINER_ENGINE) run --rm localhost/serialized-fn:ubi8 ./test_load_from_memory
 
+containers-benchmark: containers-build
+	$(CONTAINER_ENGINE) run --rm localhost/serialized-fn:ubi7 ./benchmark_in_memory_fds 2000000
+	$(CONTAINER_ENGINE) run --rm localhost/serialized-fn:ubi8 ./benchmark_in_memory_fds 2000000
+
 asm: lib/circumference.so
 	objdump -d -C -M intel lib/circumference.so
 
 clean:
-	$(RM) lib/*.so lib/*.o test_load_from_file test_load_from_memory
+	$(RM) lib/*.so lib/*.o test_load_from_file test_load_from_memory benchmark_in_memory_fds
 
-.PHONY: asm clean container-build test-file test-memory containers-build containers-run
+.PHONY: asm clean container-build test-file test-memory benchmark-memory-fds containers-build containers-run containers-benchmark

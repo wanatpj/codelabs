@@ -1,56 +1,83 @@
-# Shared-library loading tests
+# Shared-library loading
 
-Run all commands from `serialized_fn/`.
+Run these commands from `serialized_fn/`. Requirements: Linux, Make, and a
+C++11 compiler.
 
-## Build and run locally
+## Run locally
 
-Requires Linux, Make, and a C++11 compiler.
+Build both programs:
 
 ```sh
 make test_load_from_file test_load_from_memory
+```
+
+Run them:
+
+```sh
 ./test_load_from_file
 ./test_load_from_memory
 ```
 
-Both tests print `circumference(5)` and the time spent loading the library and
-calling the function. The memory test reads the library into a memory-backed
-file before timing starts.
+Each program calls `circumference(5)` and prints the result and elapsed time.
+The memory test copies the shared library into a Linux memfd, then loads it.
+
+Other commands:
 
 ```sh
-make       # Build lib/circumference.so only
-make asm   # Show the library's assembly
-make clean # Remove local build outputs
+make       # Build lib/circumference.so
+make asm   # Print the shared library's assembly
+make clean # Remove generated files
 ```
 
-## Build and run containers
+## Run in UBI 7 and UBI 8
 
-Podman is the default. To use Docker instead:
-
-```sh
-export CONTAINER_ENGINE=docker
-```
-
-To switch back:
+Podman is the default container engine. `containers-run` builds both images and
+runs both programs in each image:
 
 ```sh
-export CONTAINER_ENGINE=podman
-```
-
-Build and run both tests on UBI 7 and UBI 8:
-
-```sh
-make containers-build
 make containers-run
 ```
 
-`containers-run` also builds the images, using cached layers when available.
-
-Build or run a single version and test:
+Build the images without running the programs:
 
 ```sh
-make container-build RHEL_VERSION=7
-make test-file RHEL_VERSION=7
-make test-memory RHEL_VERSION=8
+make containers-build
 ```
 
-Both test targets build the image before running. `RHEL_VERSION` defaults to `8`.
+Use Docker instead of Podman:
+
+```sh
+CONTAINER_ENGINE=docker make containers-run
+```
+
+## Benchmark memfd limits
+
+Run the benchmark in both images:
+
+```sh
+make containers-benchmark
+```
+
+The benchmark requests up to 2,000,000 memfds. It does not change system or
+process limits. It prints the system-wide `fs.file-max`, the process
+`RLIMIT_NOFILE`, the number of memfds it created, and the reason it stopped.
+
+Run it in one image:
+
+```sh
+make benchmark-memory-fds RHEL_VERSION=7
+```
+
+Results:
+```
+podman run --rm localhost/serialized-fn:ubi7 ./benchmark_in_memory_fds 2000000
+System open-file limit (fs.file-max):       9223372036854775807
+Program open-file limit (RLIMIT_NOFILE):                1048576
+Probed FD limit:                                        1048572
+Creation stopped: memfd_create: Too many open files
+podman run --rm localhost/serialized-fn:ubi8 ./benchmark_in_memory_fds 2000000
+System open-file limit (fs.file-max):       9223372036854775807
+Program open-file limit (RLIMIT_NOFILE):                1048576
+Probed FD limit:                                        1048572
+Creation stopped: memfd_create: Too many open files
+```

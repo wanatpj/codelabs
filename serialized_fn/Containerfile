@@ -4,12 +4,12 @@ FROM registry.access.redhat.com/ubi${RHEL_VERSION}/ubi:latest AS build
 COPY install-compiler.sh /tmp/install-compiler.sh
 RUN bash /tmp/install-compiler.sh
 WORKDIR /src
-COPY Makefile test_load_from_file.cpp test_load_from_memory.cpp ./
+COPY Makefile test_load_from_file.cpp test_load_from_memory.cpp benchmark_in_memory_fds.cpp ./
 COPY lib/*.cpp lib/*.h ./lib/
-RUN make -j2 test_load_from_file test_load_from_memory
+RUN make -j2 test_load_from_file test_load_from_memory benchmark_in_memory_fds
 
 FROM registry.access.redhat.com/ubi${RHEL_VERSION}/ubi:latest AS runtime
 WORKDIR /app
-COPY --from=build /src/test_load_from_file /src/test_load_from_memory ./
+COPY --from=build /src/test_load_from_file /src/test_load_from_memory /src/benchmark_in_memory_fds ./
 COPY --from=build /src/lib/circumference.so ./lib/circumference.so
 CMD ["./test_load_from_file"]
