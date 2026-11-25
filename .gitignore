@@ -2,3 +2,40 @@
 **/problem
 **/solution
 **/solution2
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# C and C++ build artifacts
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Codelab executables
+serialized_fn/test_load_from_file
+serialized_fn/test_load_from_memory
+serialized_fn/benchmark_in_memory_fds
+clang_memory_sanitizer/uninitialized
+clang_memory_sanitizer/initialized
+
+# Generated run data and crash dumps
+runs/
+core
+core.*
